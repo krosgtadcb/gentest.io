@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardGen Pro - Herramientas</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding-top: 70px;
+        }
+
+        /* Loader */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f0f1a; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 9999;
+            transition: opacity 0.6s ease-out;
+        }
+        .loader-spinner {
+            width: 50px; height: 50px; border: 4px solid #333;
+            border-top: 4px solid #4a9eff; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        .loader-text { font-size: 1.1rem; color: #aaa; letter-spacing: 1px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Header Menu */
+        .header {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+            background: #1a1a2e; border-bottom: 1px solid #334466;
+            padding: 0 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .nav {
+            display: flex; justify-content: center; flex-wrap: wrap;
+            gap: 5px; padding: 15px 0;
+        }
+        .nav-btn {
+            padding: 10px 18px; background: transparent; color: #aaa;
+            border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
+            transition: all 0.3s; font-size: 0.95rem;
+        }
+        .nav-btn:hover { background: #334466; color: #fff; }
+        .nav-btn.active {
+            background: #4a9eff; color: white; box-shadow: 0 0 10px rgba(74,158,255,0.5);
+        }
+
+        /* Contenido */
+        .content {
+            max-width: 800px; margin: 0 auto; padding: 20px;
+        }
+        .section {
+            display: none; background: #1a1a2e; border-radius: 16px;
+            padding: 30px; margin-bottom: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            opacity: 0; transform: translateY(20px); transition: all 0.5s ease-out;
+        }
+        .section.active {
+            display: block; opacity: 1; transform: translateY(0);
+        }
+
+        h1 { text-align: center; margin-bottom: 25px; color: #fff; font-size: 1.8rem; }
+        label { display: block; margin: 15px 0 8px; font-weight: 600; color: #ccc; }
+        input, select, textarea {
+            width: 100%; padding: 12px; background: #16213e; border: 1px solid #334466;
+            border-radius: 10px; color: #e0e0e0; font-size: 1rem; transition: border 0.3s;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #4a9eff; }
+
+        .check { display: flex; align-items: center; gap: 10px; margin: 10px 0; color: #bbb; }
+        .check input { width: auto; }
+
+        .btn {
+            width: 100%; padding: 14px; margin: 15px 0 10px; border: none; border-radius: 12px;
+            font-weight: 600; font-size: 1.05rem; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-primary { background: #4a9eff; color: white; }
+        .btn-primary:hover { background: #3a8eff; transform: translateY(-2px); }
+        .btn-success { background: #00c853; color: white; }
+        .btn-success:hover { background: #00b140; }
+
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff;
+            border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;
+            margin-right: 8px; }
+
+        .status { text-align: center; margin: 12px 0; font-size: 0.95rem; min-height: 24px; font-weight: 500; }
+        .status.success { color: #4ade80; }
+        .status.error { color: #ff6b6b; }
+
+        /* Tablas */
+        .table-container { max-height: 320px; overflow-y: auto; border: 1px solid #334466; border-radius: 10px; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-family: 'Courier New', monospace; }
+        th, td { padding: 10px; text-align: center; border-bottom: 1px solid #334466; }
+        th { background: #16213e; color: #4ade80; font-weight: 600; }
+        tr:hover { background: #1e2a44; }
+
+        .note { text-align: center; margin-top: 20px; font-size: 0.85rem; color: #888; }
+
+        .date-row { display: flex; gap: 10px; }
+        .date-row select { flex: 1; }
+
+        .invalid { border-color: #ff6b6b !important; }
+        .valid { border-color: #4ade80 !important; }
+
+        .bin-info {
+            background: #16213e; padding: 20px; border-radius: 10px; margin-top: 15px;
+            border-left: 4px solid #4ade80;
+        }
+        .bin-info h3 { color: #4ade80; margin-bottom: 10px; }
+        .bin-detail { margin: 8px 0; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Loader -->
+    <div id="loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Cargando Herramientas...</div>
+    </div>
+
+    <!-- Header Menu -->
+    <div class="header">
+        <div class="nav">
+            <button class="nav-btn active" onclick="showSection('tarjetas')">Generar Tarjetas</button>
+            <button class="nav-btn" onclick="showSection('base64')">Base64</button>
+            <button class="nav-btn" onclick="showSection('bins')">Generar BINs</button>
+        </div>
+    </div>
+
+    <!-- Contenido -->
+    <div class="content">
+
+        <!-- === GENERAR TARJETAS === -->
+        <div id="tarjetas" class="section active">
+            <h1>Generador de Tarjetas</h1>
+            <label>BIN (6 dígitos, inicia con 3,4,5):</label>
+            <input type="text" id="bin" maxlength="6" placeholder="414720" oninput="validarBIN()">
+            <div class="status" id="binStatus">Ingresa un BIN válido</div>
+            <label>Cantidad (1-100):</label>
+            <input type="number" id="cantidad" min="1" max="100" value="1">
+            <label>Fecha de vencimiento:</label>
+            <div class="check">
+                <input type="checkbox" id="fechaAuto" checked>
+                <label for="fechaAuto">Aleatoria (próximos 5 años)</label>
+            </div>
+            <div class="date-row" id="fechaManual" style="display:none;">
+                <select id="month"><option value="">Mes</option><script>for(let i=1;i<=12;i++) document.write(`<option value="${i.toString().padStart(2,'0')}">${i.toString().padStart(2,'0')}</option>`);</script></select>
+                <select id="year"><option value="">Año</option><script>const cy = new Date().getFullYear() % 100; for(let i=0;i<6;i++) { const y = ((cy + i) % 100).toString().padStart(2,'0'); document.write(`<option value="${y}">${y}</option>`); }</script></select>
+            </div>
+            <label>CVV:</label>
+            <div class="check">
+                <input type="checkbox" id="cvvAuto" checked>
+                <label for="cvvAuto">Aleatorio</label>
+            </div>
+            <input type="text" id="cvvManual" placeholder="CVV manual" maxlength="3" disabled>
+            <button id="btnGenerar" class="btn btn-primary" onclick="generarTarjetas()" disabled>GENERAR</button>
+            <div class="status" id="genStatus"></div>
+            <div class="table-container">
+                <table><thead><tr><th>CC</th><th>MES/AÑO</th><th>CVV</th></tr></thead><tbody id="tablaTarjetas"></tbody></table>
+            </div>
+            <button id="btnCopiarTarjetas" class="btn btn-success" onclick="copiarTabla('tarjetas')" style="display:none;">COPIAR TABLA</button>
+            <div class="status" id="copyTarjetasStatus"></div>
+            <p class="note">Solo para pruebas. Números válidos por Luhn.</p>
+        </div>
+
+        <!-- === BASE64 === -->
+        <div id="base64" class="section">
+            <h1>Base64 Encode / Decode</h1>
+            <label>Texto:</label>
+            <textarea id="textoBase64" rows="5" placeholder="Escribe o pega aquí..."></textarea>
+            <button class="btn btn-primary" onclick="codificarBase64()">CODIFICAR</button>
+            <button class="btn btn-success" onclick="decodificarBase64()">DECODIFICAR</button>
+            <label>Resultado:</label>
+            <textarea id="resultadoBase64" rows="5" readonly></textarea>
+            <button class="btn btn-success" onclick="copiarResultado('resultadoBase64')" style="margin-top:10px;">COPIAR</button>
+            <div class="status" id="base64Status"></div>
+        </div>
+
+        <!-- === GENERAR BINS === -->
+        <div id="bins" class="section">
+            <h1>Generar BINs</h1>
+            <label>Cantidad (1-50):</label>
+            <input type="number" id="cantidadBins" min="1" max="50" value="10">
+            <button class="btn btn-primary" onclick="generarBins()">GENERAR BINS</button>
+            <div class="status" id="binsStatus"></div>
+            <div class="table-container">
+                <table><thead><tr><th>BIN</th><th>Tipo</th></tr></thead><tbody id="tablaBins"></tbody></table>
+            </div>
+            <button class="btn btn-success" onclick="copiarTabla('bins')" style="display:none;" id="btnCopiarBins">COPIAR</button>
+        </div>
+    </div>
+
+    <script>
+        // === LOADER ===
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 600);
+            }, 1200);
+        });
+
+        // === NAVEGACIÓN ===
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // === GENERAR TARJETAS ===
+        const binInput = document.getElementById('bin');
+        function validarBIN() {
+            const bin = binInput.value.trim();
+            const esValido = /^\d{6}$/.test(bin) && ['3','4','5'].includes(bin[0]);
+            document.getElementById('btnGenerar').disabled = !esValido;
+            const status = document.getElementById('binStatus');
+            status.textContent = esValido ? 'BIN válido' : 'BIN inválido (6 dígitos, inicia con 3,4,5)';
+            status.className = 'status ' + (esValido ? 'success' : 'error');
+        }
+
+        document.getElementById('fechaAuto').addEventListener('change', () => {
+            document.getElementById('fechaManual').style.display = document.getElementById('fechaAuto').checked ? 'none' : 'flex';
+        });
+        document.getElementById('cvvAuto').addEventListener('change', () => {
+            const m = document.getElementById('cvvManual');
+            m.disabled = document.getElementById('cvvAuto').checked;
+            if (!m.disabled) m.focus(); else m.value = '';
+        });
+
+        function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function luhn(n) {
+            let sum = 0, even = false;
+            for (let i = n.length - 1; i >= 0; i--) {
+                let d = parseInt(n[i]);
+                if (even) { d *= 2; if (d > 9) d -= 9; }
+                sum += d; even = !even;
+            }
+            return (10 - (sum % 10)) % 10;
+        }
+        function generarFecha() {
+            const mes = String(rand(1,12)).padStart(2,'0');
+            const anio = String((new Date().getFullYear() % 100 + rand(0,5)) % 100).padStart(2,'0');
+            return { mes, anio };
+        }
+
+        async function generarTarjetas() {
+            const bin = binInput.value.trim();
+            const cant = parseInt(document.getElementById('cantidad').value) || 1;
+            const autoFecha = document.getElementById('fechaAuto').checked;
+            const autoCVV = document.getElementById('cvvAuto').checked;
+            const cvvManual = document.getElementById('cvvManual').value.trim();
+
+            if (cant < 1 || cant > 100) return alert('Cantidad: 1-100');
+            if (!autoFecha && (!document.getElementById('month').value || !document.getElementById('year').value)) return alert('Selecciona fecha');
+            if (!autoCVV && !/^\d{3}$/.test(cvvManual)) return alert('CVV: 3 dígitos');
+
+            const btn = document.getElementById('btnGenerar');
+            btn.innerHTML = '<span class="spinner"></span> Generando...'; btn.disabled = true;
+            document.getElementById('genStatus').textContent = '';
+            document.getElementById('btnCopiarTarjetas').style.display = 'none';
+            document.getElementById('tablaTarjetas').innerHTML = '';
+
+            await new Promise(r => setTimeout(r, 500));
+
+            const cvvFijo = autoCVV ? null : cvvManual;
+            for (let i = 0; i < cant; i++) {
+                const fecha = autoFecha ? generarFecha() : { mes: document.getElementById('month').value, anio: document.getElementById('year').value };
+                const cvv = cvvFijo || String(rand(0,999)).padStart(3,'0');
+                let num = bin;
+                for (let j = 0; j < 9; j++) num += rand(0,9);
+                num += luhn(num);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${num}</td><td>${fecha.mes}/${fecha.anio}</td><td>${cvv}</td>`;
+                document.getElementById('tablaTarjetas').appendChild(row);
+            }
+
+            btn.innerHTML = 'GENERAR'; btn.disabled = false;
+            document.getElementById('btnCopiarTarjetas').style.display = 'block';
+            document.getElementById('genStatus').textContent = `¡Listo! ${cant} generadas.`;
+            document.getElementById('genStatus').className = 'status success';
+        }
+
+        function copiarTabla(id) {
+            let texto = '';
+            const filas = document.querySelectorAll(`#tabla${id.charAt(0).toUpperCase() + id.slice(1)} tr`);
+            filas.forEach(f => {
+                const celdas = f.querySelectorAll('td');
+                if (celdas.length) texto += Array.from(celdas).map(c => c.textContent).join(' | ') + '\n';
+            });
+            navigator.clipboard.writeText(texto.trim()).then(() => {
+                const status = id === 'tarjetas' ? 'copyTarjetasStatus' : 'binsStatus';
+                document.getElementById(status).textContent = '¡Copiado!';
+                document.getElementById(status).className = 'status success';
+                setTimeout(() => document.getElementById(status).textContent = '', 2000);
+            });
+        }
+
+        // === BASE64 ===
+        function codificarBase64() { document.getElementById('resultadoBase64').value = btoa(document.getElementById('textoBase64').value); }
+        function decodificarBase64() {
+            try { document.getElementById('resultadoBase64').value = atob(document.getElementById('textoBase64').value); }
+            catch { document.getElementById('base64Status').textContent = 'Texto inválido'; }
+        }
+        function copiarResultado(id) {
+            const el = document.getElementById(id);
+            el.select(); document.execCommand('copy');
+            document.getElementById('base64Status').textContent = '¡Copiado!';
+            setTimeout(() => document.getElementById('base64Status').textContent = '', 2000);
+        }
+
+        // === GENERAR BINS ===
+        const tipos = { '3': 'Amex', '4': 'Visa', '5': 'Mastercard' };
+        function generarBins() {
+            const cant = parseInt(document.getElementById('cantidadBins').value) || 10;
+            const tbody = document.getElementById('tablaBins');
+            tbody.innerHTML = '';
+            for (let i = 0; i < cant; i++) {
+                const inicio = ['3','4','5'][rand(0,2)];
+                let bin = inicio;
+                for (let j = 1; j < 6; j++) bin += rand(0,9);
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${bin}</td><td>${tipos[inicio]}</td>`;
+                tbody.appendChild(row);
+            }
+            document.getElementById('btnCopiarBins').style.display = 'block';
+            document.getElementById('binsStatus').textContent = `${cant} BINs generados.`;
+        }
+
+        // === BUSCAR BIN (mejorado con más datos) ===
+        function validarBinBuscar() {
+            const bin = document.getElementById('binBuscar').value.trim();
+            const esValido = /^\d{6}$/.test(bin);
+            const input = document.getElementById('binBuscar');
+            input.classList.toggle('valid', esValido);
+            input.classList.toggle('invalid', !esValido);
+        }
+
+        const binDB = {
+            '414720': { marca: 'Visa', tipoTarjeta: 'Crédito', banco: 'Chase Bank', pais: 'USA' },
+            '510510': { marca: 'Mastercard', tipoTarjeta: 'Débito', banco: 'Bank of America', pais: 'USA' },
+            '378282': { marca: 'American Express', tipoTarjeta: 'Crédito', banco: 'American Express', pais: 'USA' },
+            '555555': { marca: 'Mastercard', tipoTarjeta: 'Prepagada', banco: 'CitiBank', pais: 'USA' },
+            '601100': { marca: 'Discover', tipoTarjeta: 'Crédito', banco: 'Discover Financial', pais: 'USA' },
+            '356600': { marca: 'JCB', tipoTarjeta: 'Crédito', banco: 'JCB International', pais: 'Japón' },
+            '213100': { marca: 'JCB', tipoTarjeta: 'Débito', banco: 'JCB', pais: 'Japón' },
+            '404137': { marca: 'Visa', tipoTarjeta: 'Crédito', banco: 'BBVA', pais: 'España' },
+            '433703': { marca: 'Visa', tipoTarjeta: 'Débito', banco: 'Santander', pais: 'España' },
+            '426684': { marca: 'Visa', tipoTarjeta: 'Crédito', banco: 'HSBC', pais: 'México' },
+            '415231': { marca: 'Visa', tipoTarjeta: 'Débito', banco: 'Banamex', pais: 'México' },
+            '539822': { marca: 'Mastercard', tipoTarjeta: 'Crédito', banco: 'Banorte', pais: 'México' },
+            '542418': { marca: 'Mastercard', tipoTarjeta: 'Débito', banco: 'BBVA', pais: 'México' }
+        };
+
+        function buscarBIN() {
+            const bin = document.getElementById('binBuscar').value.trim();
+            const info = document.getElementById('infoBIN');
+            const status = document.getElementById('buscarStatus');
+
+            if (!/^\d{6}$/.test(bin)) {
+                status.textContent = 'Ingresa un BIN válido de 6 dígitos';
+                status.className = 'status error';
+                info.style.display = 'none';
+                return;
+            }
+
+            if (binDB[bin]) {
+                const data = binDB[bin];
+                document.getElementById('marca').textContent = data.marca;
+                document.getElementById('tipoTarjeta').textContent = data.tipoTarjeta;
+                document.getElementById('banco').textContent = data.banco;
+                document.getElementById('pais').textContent = data.pais;
+                info.style.display = 'block';
+                status.textContent = 'Información encontrada';
+                status.className = 'status success';
+            } else {
+                info.style.display = 'none';
+                status.textContent = 'BIN no encontrado en la base de datos';
+                status.className = 'status error';
+            }
+        }
+        validarBIN();
+    </script>
+</body>
+</html>
